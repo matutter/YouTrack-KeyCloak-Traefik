@@ -1,0 +1,98 @@
+version: "3.9"
+
+networks:
+  public_web:
+    external: true
+    name: public_web
+  keycloak_private: {}
+
+services:
+  youtrack:
+    image: youtrack:custom
+    build:
+      context: ${PWD}
+      dockerfile: youtrack.dockerfile
+      args:
+        image: jetbrains/youtrack:2021.4.35732
+    depends_on:
+    - traefik
+    environment:
+    - LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+    networks:
+      public_web: {}
+    volumes:
+    - ${PWD}/youtrack/data:/opt/youtrack/data
+    - ${PWD}/youtrack/conf:/opt/youtrack/conf
+    - ${PWD}/youtrack/logs:/opt/youtrack/logs
+    - ${PWD}/youtrack/backups:/opt/youtrack/backups
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.youtrack.entrypoints=websecure
+    - traefik.http.routers.youtrack.rule=Host(`youtrack.localhost`)
+    - traefik.http.routers.youtrack.service=youtrack
+    - traefik.http.routers.youtrack.tls=true
+    - traefik.http.services.youtrack.loadbalancer.server.port=8080
+
+  keycloak_db:
+    image: postgres:14.1-alpine3.14
+    restart: always
+    volumes:
+    - ${PWD}/keycloak/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ChangeMe123
+    networks:
+      keycloak_private: {}
+
+
+  keycloak:
+    image: bitnami/keycloak:15.0.2
+    depends_on:
+    - keycloak_db
+    - traefik
+    environment:
+    - KEYCLOAK_DATABASE_HOST=keycloak_db
+    - KEYCLOAK_DATABASE_NAME=keycloak
+    - KEYCLOAK_DATABASE_SCHEMA=public
+    - KEYCLOAK_DATABASE_USER=keycloak
+    - KEYCLOAK_DATABASE_PASSWORD=ChangeMe123
+    - KEYCLOAK_USER=admin
+    - KEYCLOAK_PASSWORD=ChangeMe123
+    - KEYCLOAK_ENABLE_TLS=false
+    - KEYCLOAK_HTTP_PORT=8080
+    - KEYCLOAK_CREATE_ADMIN_USER=true
+    - KEYCLOAK_PROXY_ADDRESS_FORWARDING=true
+    - KEYCLOAK_LOGLEVEL=ERROR
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.keycloak.entrypoints=websecure
+    - traefik.http.routers.keycloak.rule=Host(`keycloak.localhost`)
+    - traefik.http.routers.keycloak.service=keycloak
+    - traefik.http.routers.keycloak.tls=true
+    - traefik.http.services.keycloak.loadbalancer.server.port=8080
+    networks:
+      keycloak_private: {}
+      public_web: {}
+
+  traefik:
+    image: traefik:v2.5
+    restart: always
+    networks:
+      public_web:
+        aliases:
+        - keycloak.localhost
+        - youtrack.localhost
+    ports:
+    - 80:80
+    - 443:443
+    - 8080:8080
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ${PWD}/ssl/server.crt:/etc/traefik/server.crt:ro
+    - ${PWD}/ssl/server.key:/etc/traefik/server.key:ro
+    - ${PWD}/traefik/logs:/var/log/traefik
+    - ${PWD}/traefik/config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+    - ${PWD}/traefik/config/traefik_dyn.yaml:/etc/traefik/dyn.yaml:ro
+
+

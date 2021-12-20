@@ -1,0 +1,15 @@
+tls:
+  options:
+    default:
+      sniStrict: false
+  certificates:
+  - certFile: /etc/traefik/server.crt
+    keyFile: /etc/traefik/server.key
+    stores:
+    - default
+  # Used for non-matching or absent SNIs
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/server.crt
+        keyFile: /etc/traefik/server.key

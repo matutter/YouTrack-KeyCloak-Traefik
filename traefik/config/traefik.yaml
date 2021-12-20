@@ -1,0 +1,36 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+api:
+  insecure: true
+  dashboard: true
+  debug: false
+
+pilot:
+  dashboard: false
+
+accessLog:
+  filePath: /var/log/traefik/access.log
+  bufferingSize: 100
+
+providers:
+  docker:
+    watch: true
+    exposedByDefault: false
+    network: public_web
+  file:
+    filename: /etc/traefik/dyn.yaml
+
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
