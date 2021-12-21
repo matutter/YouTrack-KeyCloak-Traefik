@@ -7,6 +7,7 @@ networks:
   keycloak_private: {}
 
 services:
+
   youtrack:
     image: youtrack:custom
     build:

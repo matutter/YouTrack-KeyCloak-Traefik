@@ -3,10 +3,15 @@ FROM $IMAGE
 
 USER 0
 
-RUN apt-get update -y && apt-get install -y -q ca-certificates
+ADD ssl/ca/ca.crt /tmp/ca.crt
 
-ADD ssl/ca/ca.crt /usr/local/share/ca-certificates/ca.crt
-
-RUN update-ca-certificates
+RUN /opt/youtrack/internal/java/linux-x64/bin/keytool \
+  -importcert \
+  -keystore /opt/youtrack/internal/java/linux-x64/lib/security/cacerts \
+  -storepass changeit \
+  -file /tmp/ca.crt \
+  -alias "myroot" \
+  -noprompt \
+  && rm -f /tmp/ca.crt
 
 USER 13001
