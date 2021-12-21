@@ -1,7 +1,7 @@
 
 # Youtrack / KeyCloak / Traefik
 
-Sample docker-compose deployment for Youtrack with KeyCloak for auth and Traefik
+Sample docker-compose deployment for YouTrack with KeyCloak for auth and Traefik
 as a reverse proxy.
 
 The included SSL certificates & keys are self-signed and issued to `localhost`.
