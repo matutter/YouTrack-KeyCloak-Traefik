@@ -89,7 +89,7 @@ services:
     - 8080:8080
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
-    - ${PWD}/ssl/server.crt:/etc/traefik/server.crt:ro
+    - ${PWD}/ssl/fullchain.crt:/etc/traefik/server.crt:ro
     - ${PWD}/ssl/server.key:/etc/traefik/server.key:ro
     - ${PWD}/traefik/logs:/var/log/traefik
     - ${PWD}/traefik/config/traefik.yaml:/etc/traefik/traefik.yaml:ro
